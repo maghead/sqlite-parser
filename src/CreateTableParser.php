@@ -148,7 +148,8 @@ class CreateTableParser extends BaseParser
                     }
 
                 } else if ($constraintToken->val == 'COLLATE') {
-                    $collateName = $this->tryParseIdentifier();
+
+                    $collateName = $this->tryParseKeyword(['BINARY','NOCASE', 'RTRIM'], 'literal');
                     $column->collate = $collateName->val;
 
                 } else if ($constraintToken->val == 'REFERENCES') {

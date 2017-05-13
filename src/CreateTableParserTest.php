@@ -48,6 +48,7 @@ class CreateTableParserTest extends TestCase
         $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20 CONSTRAINT aa UNIQUE(a DESC))', -20];
         $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20 CONSTRAINT aa PRIMARY(a))', -20];
         $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20 CONSTRAINT aa PRIMARY KEY(a))', -20];
+        $data[] = ['CREATE TABLE `foo` (`a` TEXT COLLATE NOCASE DEFAULT 0)', 0];
         return $data;
     }
 
