@@ -154,7 +154,7 @@ class CreateTableParserTest extends TestCase
     public function testEmptyColumns()
     {
         $parser = new CreateTableParser;
-        $def = $parser->parse('CREATE TABLE foo ()');
+        $def = $parser->parse('CREATE TABLE foo ( )');
         $this->assertNotNull($def);
         $this->assertEquals('foo', $def->tableName);
         $this->assertCount(0, $def->columns);
