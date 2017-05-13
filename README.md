@@ -19,7 +19,12 @@ $sql = 'CREATE TEMP TABLE `foo` (`a` INT DEFAULT 0, name VARCHAR, address VARCHA
 $parser = new TableParser;
 $def = $parser->parse($sql);
 
-$this->assertCount(3, $def->columns);
+foreach ($def->columns as $c) {
+    echo $c->name;
+    echo $c->type;
+    echo $c->primary;
+}
+
 $this->assertCount(1, $def->constraints);
 $this->assertInstanceOf('Maghead\\SqliteParser\\Constraint', $def->constraints[0]);
 $this->assertEquals('address_idx', $def->constraints[0]->name);
