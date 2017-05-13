@@ -13,6 +13,9 @@ Maghead Sqlite Parser
 [![Works On My Machine](https://cdn.rawgit.com/nikku/works-on-my-machine/v0.2.0/badge.svg)](https://github.com/nikku/works-on-my-machine)
 [![Made in Taiwan](https://img.shields.io/badge/made%20in-taiwan-green.svg)](README.md)
 
+SYNOPSIS
+========
+
 ```php
 
 use Maghead\SqliteParser\CreateTableParser;
@@ -33,6 +36,11 @@ $this->assertInstanceOf('Maghead\\SqliteParser\\Constraint', $def->constraints[0
 $this->assertEquals('address_idx', $def->constraints[0]->name);
 $this->assertCount(2, $def->constraints[0]->unique);
 ```
+
+INSTALL
+=======
+
+    composer require maghead/sqlite-parser
 
 USAGE
 ======
