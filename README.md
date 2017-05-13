@@ -37,6 +37,11 @@ $this->assertEquals('address_idx', $def->constraints[0]->name);
 $this->assertCount(2, $def->constraints[0]->unique);
 ```
 
+
+
+
+
+
 INSTALL
 =======
 
@@ -48,6 +53,72 @@ USAGE
 Just simply call the `parse` method and you will get what you want.
 
 `var_dump` is your friend. :-)
+
+
+```php
+class Maghead\SqliteParser\Table#2 (5) {
+  public $columns =>
+  array(1) {
+    [0] =>
+    class Maghead\SqliteParser\Column#6 (13) {
+      public $name =>
+      string(1) "a"
+      public $type =>
+      string(3) "INT"
+      public $length =>
+      NULL
+      public $decimals =>
+      NULL
+      public $unsigned =>
+      bool(false)
+      public $primary =>
+      NULL
+      public $ordering =>
+      NULL
+      public $autoIncrement =>
+      NULL
+      public $unique =>
+      NULL
+      public $notNull =>
+      NULL
+      public $default =>
+      int(-20)
+      public $collate =>
+      NULL
+      public $references =>
+      NULL
+    }
+  }
+  public $temporary =>
+  bool(true)
+  public $ifNotExists =>
+  bool(false)
+  public $tableName =>
+  string(3) "foo"
+  public $constraints =>
+  array(1) {
+    [0] =>
+    class Maghead\SqliteParser\Constraint#8 (4) {
+      public $name =>
+      string(2) "aa"
+      public $primaryKey =>
+      NULL
+      public $unique =>
+      array(1) {
+        [0] =>
+        class stdClass#13 (2) {
+          public $name =>
+          string(1) "a"
+          public $ordering =>
+          string(3) "ASC"
+        }
+      }
+      public $foreignKey =>
+      NULL
+    }
+  }
+}
+```
 
 
 LICENSE
