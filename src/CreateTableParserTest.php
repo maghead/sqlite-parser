@@ -162,6 +162,7 @@ class CreateTableParserTest extends TestCase
     public function incorrectSqlProvider()
     {
         $data = [];
+        $data[] = ['CREATE TABLE foo '];
         $data[] = ['CREATE TABLE foo (`a INT UNSIGNED DEFAULT 123)'];
         $data[] = ['CREATE TABLE foo (`a`)'];
         $data[] = ['CREATE TABLE foo (`a` INT UNSIGNED DEFAULT 123 CONSTRAINT)'];

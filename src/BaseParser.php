@@ -121,20 +121,13 @@ class BaseParser
         $this->p = $p;
     }
 
-    protected function test($str)
+    protected function test(array $str)
     {
-        if (is_array($str)) {
-            foreach ($str as $s) {
-                if ($this->test($s)) {
-                    return strlen($s);
-                }
+        foreach ($str as $s) {
+            $p = stripos($this->str, $s, $this->p);
+            if ($p === $this->p) {
+                return strlen($s);
             }
-        } elseif (is_string($str)) {
-            $p = stripos($this->str, $str, $this->p);
-
-            return $p === $this->p ? strlen($str) : false;
-        } else {
-            throw new Exception('Invalid argument type');
         }
     }
 }
