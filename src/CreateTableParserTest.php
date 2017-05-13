@@ -163,6 +163,7 @@ class CreateTableParserTest extends TestCase
     public function incorrectSqlProvider()
     {
         $data = [];
+        $data[] = ['CREATE '];
         $data[] = ['CREATE TABLE foo '];
         $data[] = ['CREATE TABLE foo (`a INT UNSIGNED DEFAULT 123)']; // unbalanced quote
         $data[] = ['CREATE TABLE foo (`a` INT UNSIGNED DEFAULT aaa)']; // invalid default
