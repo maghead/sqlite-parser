@@ -15,6 +15,12 @@
     </whitelist>
   </filter>
 
+  <testsuites>
+    <testsuite name="SqliteParser">
+      <directory suffix="Test.php">src</directory>
+    </testsuite>
+  </testsuites>
+
   <logging>
     <log type="tap" target="build/logs/report.tap" />
     <log type="junit" target="build/logs/report.junit.xml" />
