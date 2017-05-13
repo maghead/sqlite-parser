@@ -26,6 +26,14 @@ $this->assertEquals('address_idx', $def->constraints[0]->name);
 $this->assertCount(2, $def->constraints[0]->unique);
 ```
 
+USAGE
+======
+
+Just simply call the `parse` method and you will get what you want.
+
+`var_dump` is your friend. :-)
+
+
 LICENSE
 =======
 MIT LICENSE
