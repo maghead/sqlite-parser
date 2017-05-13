@@ -1,0 +1,25 @@
+{
+    "name": "maghead/sqlite-parser",
+    "homepage": "https://github.com/maghead/sqlite-parser",
+    "keywords": [
+        "database",
+        "sqlite",
+        "parser",
+        "sql"
+    ],
+    "description": "sqlite table schema parser",
+    "require": {
+        "php": ">=7.0"
+    },
+    "support": {
+        "issues": "https://github.com/maghead/sqlite-parser/issues"
+    },
+    "license": "MIT",
+    "authors": [
+        { "name": "Yo-An Lin", "email": "cornelius.howl@gmail.com" }
+    ],
+    "extra": { "branch-alias": { "dev-master": "4.0.x-dev" } },
+    "autoload": {
+        "psr-4": { "Maghead\\SqliteParser\\": "src/" }
+    }
+}
