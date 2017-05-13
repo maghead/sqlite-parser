@@ -4,6 +4,9 @@ namespace Maghead\SqliteParser;
 
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @codeCoverageIgnore
+ */
 class CreateTableParserTest extends TestCase
 {
     public function schemaSqlProvider()
