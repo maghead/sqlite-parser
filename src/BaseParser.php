@@ -2,6 +2,8 @@
 
 namespace Maghead\SqliteParser;
 
+use Exception;
+
 class BaseParser
 {
     /**

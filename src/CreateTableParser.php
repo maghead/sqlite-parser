@@ -49,12 +49,8 @@ class CreateTableParser extends BaseParser
         $this->ignoreSpaces();
 
         if ($this->tryParseKeyword(['IF'])) {
-            if (!$this->tryParseKeyword(['NOT'])) {
-                throw new Exception('Unexpected token');
-            }
-            if (!$this->tryParseKeyword(['EXISTS'])) {
-                throw new Exception('Unexpected token');
-            }
+            $this->expectKeyword(['NOT']);
+            $this->expectKeyword(['EXISTS']);
             $tableDef->ifNotExists = true;
         }
 
@@ -89,79 +85,78 @@ class CreateTableParser extends BaseParser
             $column->name = $identifier->val;
 
             $this->ignoreSpaces();
-            $typeName = $this->tryParseTypeName();
-            if ($typeName) {
+            $typeName = $this->parseTypeName();
+
+            $this->ignoreSpaces();
+            $column->type = $typeName->val;
+            $precision = $this->tryParseTypePrecision();
+            if ($precision && $precision->val) {
+                if (count($precision->val) == 2) {
+                    $column->length = $precision->val[0];
+                    $column->decimals = $precision->val[1];
+                } elseif (count($precision->val) == 1) {
+                    $column->length = $precision->val[0];
+                }
+            }
+
+            if (in_array(strtoupper($column->type), self::$intTypes)) {
+                $column->unsigned = $this->consume('unsigned', 'unsigned');
+            }
+
+            while ($constraintToken = $this->tryParseColumnConstraint()) {
+
+                if ($constraintToken->val == 'PRIMARY') {
+                    $this->tryParseKeyword(['KEY']);
+
+                    $column->primary = true;
+
+                    if ($orderingToken = $this->tryParseKeyword(['ASC', 'DESC'])) {
+                        $column->ordering = $orderingToken->val;
+                    }
+
+                    if ($this->tryParseKeyword(['AUTOINCREMENT'])) {
+                        $column->autoIncrement = true;
+                    }
+
+                } else if ($constraintToken->val == 'UNIQUE') {
+
+                    $column->unique = true;
+
+                } else if ($constraintToken->val == 'NOT NULL') {
+
+                    $column->notNull = true;
+
+                } else if ($constraintToken->val == 'NULL') {
+
+                    $column->notNull = false;
+
+                } else if ($constraintToken->val == 'DEFAULT') {
+
+                    // parse scalar
+                    if ($scalarToken = $this->tryParseScalar()) {
+                        $column->default = $scalarToken->val;
+                    } elseif ($literal = $this->tryParseKeyword(['CURRENT_TIME', 'CURRENT_DATE', 'CURRENT_TIMESTAMP'], 'literal')) {
+                        $column->default = $literal;
+                    } elseif ($null = $this->tryParseKeyword(['NULL'])) {
+                        $column->default = null;
+                    } elseif ($null = $this->tryParseKeyword(['TRUE'])) {
+                        $column->default = true;
+                    } elseif ($null = $this->tryParseKeyword(['FALSE'])) {
+                        $column->default = false;
+                    } else {
+                        throw new Exception("Can't parse literal: ".$this->currentWindow());
+                    }
+
+                } else if ($constraintToken->val == 'COLLATE') {
+                    $collateName = $this->tryParseIdentifier();
+                    $column->collate = $collateName->val;
+
+                } else if ($constraintToken->val == 'REFERENCES') {
+
+                    $column->references = $this->parseReferenceClause();
+
+                }
                 $this->ignoreSpaces();
-                $column->type = $typeName->val;
-                $precision = $this->tryParseTypePrecision();
-                if ($precision && $precision->val) {
-                    if (count($precision->val) == 2) {
-                        $column->length = $precision->val[0];
-                        $column->decimals = $precision->val[1];
-                    } elseif (count($precision->val) == 1) {
-                        $column->length = $precision->val[0];
-                    }
-                }
-
-                if (in_array(strtoupper($column->type), self::$intTypes)) {
-                    $column->unsigned = $this->consume('unsigned', 'unsigned');
-                }
-
-                while ($constraintToken = $this->tryParseColumnConstraint()) {
-
-                    if ($constraintToken->val == 'PRIMARY') {
-                        $this->tryParseKeyword(['KEY']);
-
-                        $column->primary = true;
-
-                        if ($orderingToken = $this->tryParseKeyword(['ASC', 'DESC'])) {
-                            $column->ordering = $orderingToken->val;
-                        }
-
-                        if ($this->tryParseKeyword(['AUTOINCREMENT'])) {
-                            $column->autoIncrement = true;
-                        }
-
-                    } else if ($constraintToken->val == 'UNIQUE') {
-
-                        $column->unique = true;
-
-                    } else if ($constraintToken->val == 'NOT NULL') {
-
-                        $column->notNull = true;
-
-                    } else if ($constraintToken->val == 'NULL') {
-
-                        $column->notNull = false;
-
-                    } else if ($constraintToken->val == 'DEFAULT') {
-
-                        // parse scalar
-                        if ($scalarToken = $this->tryParseScalar()) {
-                            $column->default = $scalarToken->val;
-                        } elseif ($literal = $this->tryParseKeyword(['CURRENT_TIME', 'CURRENT_DATE', 'CURRENT_TIMESTAMP'], 'literal')) {
-                            $column->default = $literal;
-                        } elseif ($null = $this->tryParseKeyword(['NULL'])) {
-                            $column->default = null;
-                        } elseif ($null = $this->tryParseKeyword(['TRUE'])) {
-                            $column->default = true;
-                        } elseif ($null = $this->tryParseKeyword(['FALSE'])) {
-                            $column->default = false;
-                        } else {
-                            throw new Exception("Can't parse literal: ".$this->currentWindow());
-                        }
-
-                    } else if ($constraintToken->val == 'COLLATE') {
-                        $collateName = $this->tryParseIdentifier();
-                        $column->collate = $collateName->val;
-
-                    } else if ($constraintToken->val == 'REFERENCES') {
-
-                        $column->references = $this->parseReferenceClause();
-
-                    }
-                    $this->ignoreSpaces();
-                }
             }
 
             $tableDef->columns[] = $column;
@@ -364,7 +359,7 @@ class CreateTableParser extends BaseParser
     public static $numericTypes = ['NUMERIC', 'DECIMAL', 'BOOLEAN', 'DATE', 'DATETIME', 'TIMESTAMP'];
 
 
-    protected function tryParseTypeName()
+    protected function parseTypeName()
     {
         $blobTypes = ['BLOB', 'NONE'];
         $realTypes = ['REAL', 'DOUBLE', 'DOUBLE PRECISION', 'FLOAT'];
@@ -382,9 +377,7 @@ class CreateTableParser extends BaseParser
                 return new Token('type-name', $typeName);
             }
         }
-
-        return;
-        // throw new Exception('Expecting type-name');
+        throw new Exception('Expecting type-name');
     }
 
     protected function tryParseIdentifier()
