@@ -245,7 +245,6 @@ class CreateTableParser extends BaseParser
                 if (isset($tableConstraint->name)) {
                     throw new Exception('Expect constraint type');
                 }
-                break;
             }
 
             if (in_array($tableConstraintKeyword->val, ['PRIMARY', 'FOREIGN'])) {
@@ -396,13 +395,12 @@ class CreateTableParser extends BaseParser
 
             return new Token('identifier', $token);
         }
+
         if (preg_match('/^(\w+)/', substr($this->str, $this->p), $matches)) {
             $this->p += strlen($matches[0]);
 
             return new Token('identifier', $matches[1]);
         }
-
-        return;
     }
 
     protected function tryParseScalar()
