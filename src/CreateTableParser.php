@@ -24,6 +24,11 @@ use stdClass;
  */
 class CreateTableParser extends BaseParser
 {
+    public static $intTypes = ['INT', 'INTEGER', 'TINYINT', 'SMALLINT', 'MEDIUMINT', 'BIGINT', 'BIG INT', 'INT2', 'INT8'];
+    public static $textTypes = ['CHARACTER', 'VARCHAR', 'VARYING CHARACTER', 'NCHAR', 'NATIVE CHARACTER', 'NVARCHAR', 'TEXT', 'BLOB', 'BINARY'];
+    public static $numericTypes = ['NUMERIC', 'DECIMAL', 'BOOLEAN', 'DATE', 'DATETIME', 'TIMESTAMP'];
+
+
     public function parse($input, $offset = 0)
     {
         $this->str    = $input;
@@ -354,20 +359,13 @@ class CreateTableParser extends BaseParser
         });
     }
 
-    public static $intTypes = ['INT', 'INTEGER', 'TINYINT', 'SMALLINT', 'MEDIUMINT', 'BIGINT', 'BIG INT', 'INT2', 'INT8'];
-    public static $textTypes = ['CHARACTER', 'VARCHAR', 'VARYING CHARACTER', 'NCHAR', 'NATIVE CHARACTER', 'NVARCHAR', 'TEXT', 'BLOB', 'BINARY'];
-    public static $numericTypes = ['NUMERIC', 'DECIMAL', 'BOOLEAN', 'DATE', 'DATETIME', 'TIMESTAMP'];
 
 
     protected function parseTypeName()
     {
         $blobTypes = ['BLOB', 'NONE'];
         $realTypes = ['REAL', 'DOUBLE', 'DOUBLE PRECISION', 'FLOAT'];
-        $allTypes = array_merge(self::$intTypes,
-            self::$textTypes,
-            $blobTypes,
-            $realTypes,
-            self::$numericTypes);
+        $allTypes = array_merge(self::$intTypes, self::$textTypes, $blobTypes, $realTypes, self::$numericTypes);
         $this->sortKeywordsByLen($allTypes);
         foreach ($allTypes as $typeName) {
             // Matched
