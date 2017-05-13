@@ -163,9 +163,9 @@ class CreateTableParserTest extends TestCase
     {
         $data = [];
         $data[] = ['CREATE TABLE foo '];
-        $data[] = ['CREATE TABLE foo (`a INT UNSIGNED DEFAULT 123)'];
-        $data[] = ['CREATE TABLE foo (`a INT UNSIGNED DEFAULT aaa)']; // invalid default
-        $data[] = ['CREATE TABLE foo (`a`)'];
+        $data[] = ['CREATE TABLE foo (`a INT UNSIGNED DEFAULT 123)']; // unbalanced quote
+        $data[] = ['CREATE TABLE foo (`a` INT UNSIGNED DEFAULT aaa)']; // invalid default
+        $data[] = ['CREATE TABLE foo (`a`)']; // without typename
         $data[] = ['CREATE TABLE foo (`a` INT UNSIGNED DEFAULT 123 CONSTRAINT)'];
         $data[] = ['CREATE TABLE foo (`a` INT UNSIGNED DEFAULT 123 CONSTRAINT aa)'];
         $data[] = ['CREATE TABLE foo (`a` DOUBLE('];
