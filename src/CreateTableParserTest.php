@@ -44,6 +44,7 @@ class CreateTableParserTest extends TestCase
         $data[] = ['CREATE TEMP TABLE `foo` (`a` TIMESTAMP DEFAULT CURRENT_DATE)', new Token('literal','CURRENT_DATE')];
         $data[] = ['CREATE TEMP TABLE `foo` (`a` TIMESTAMP DEFAULT CURRENT_TIMESTAMP)', new Token('literal','CURRENT_TIMESTAMP')];
         $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20 CONSTRAINT aa UNIQUE(a))', -20];
+        $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20 CONSTRAINT aa UNIQUE(a COLLATE NOCASE ASC))', -20];
         $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20 CONSTRAINT aa UNIQUE(a ASC))', -20];
         $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20 CONSTRAINT aa UNIQUE(a DESC))', -20];
         $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20 CONSTRAINT aa PRIMARY(a))', -20];
