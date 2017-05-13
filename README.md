@@ -15,8 +15,11 @@ Maghead Sqlite Parser
 
 ```php
 
+use Maghead\SqliteParser\CreateTableParser;
+
 $sql = 'CREATE TEMP TABLE `foo` (`a` INT DEFAULT 0, name VARCHAR, address VARCHAR, CONSTRAINT address_idx UNIQUE(name, address))';
-$parser = new TableParser;
+
+$parser = new CreateTableParser;
 $def = $parser->parse($sql);
 
 foreach ($def->columns as $c) {

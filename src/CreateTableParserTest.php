@@ -4,10 +4,7 @@ namespace Maghead\SqliteParser;
 
 use PHPUnit\Framework\TestCase;
 
-/**
- * @group table-parser
- */
-class TableParserTest extends TestCase
+class CreateTableParserTest extends TestCase
 {
     public function schemaSqlProvider()
     {
@@ -47,7 +44,7 @@ class TableParserTest extends TestCase
      */
     public function testDefaultValueParsing($sql, $exp)
     {
-        $parser = new TableParser;
+        $parser = new CreateTableParser;
         $def = $parser->parse($sql);
         $this->assertObjectHasAttribute('tableName', $def);
         $this->assertEquals('foo', $def->tableName);
@@ -58,7 +55,7 @@ class TableParserTest extends TestCase
     public function testUniqueIndex()
     {
         $sql = 'CREATE TEMP TABLE `foo` (`a` INT DEFAULT 0, name VARCHAR, address VARCHAR, CONSTRAINT address_idx UNIQUE(name, address))';
-        $parser = new TableParser;
+        $parser = new CreateTableParser;
         $def = $parser->parse($sql);
         $this->assertCount(3, $def->columns);
         $this->assertCount(1, $def->constraints);
@@ -69,7 +66,7 @@ class TableParserTest extends TestCase
 
     public function testForeignKeyReferenceParsing()
     {
-        $parser = new TableParser;
+        $parser = new CreateTableParser;
         $def = $parser->parse('CREATE TABLE foo (`book_id` INT UNSIGNED NOT NULL CONSTRAINT const_book FOREIGN KEY (book_id) REFERENCES books(id, name))');
         $this->assertNotNull($def);
         $this->assertEquals('foo', $def->tableName);
@@ -89,7 +86,7 @@ class TableParserTest extends TestCase
 
     public function testUnsignedInt()
     {
-        $parser = new TableParser;
+        $parser = new CreateTableParser;
         $def = $parser->parse('CREATE TABLE foo (`a` INT UNSIGNED DEFAULT 123)');
         $this->assertNotNull($def);
         $this->assertEquals('foo', $def->tableName);
@@ -105,7 +102,7 @@ class TableParserTest extends TestCase
      */
     public function testForIssue94()
     {
-        $parser = new TableParser;
+        $parser = new CreateTableParser;
         $def = $parser->parse('CREATE TABLE foo (`col4` text DEFAULT \'123\\\'\')');
         $this->assertNotNull($def);
         $this->assertEquals('foo', $def->tableName);

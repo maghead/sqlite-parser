@@ -22,7 +22,7 @@ use stdClass;
  * - Create table .. AS SELECT ...
  * - Foreign key clause actions
  */
-class TableParser extends BaseParser
+class CreateTableParser extends BaseParser
 {
     public function parse($input, $offset = 0)
     {
