@@ -322,7 +322,7 @@ class CreateTableParser extends BaseParser
 
     protected function tryParseTypePrecision()
     {
-        $c = $this->str[ $this->p ];
+        $c = $this->cur();
         if ($c == '(') {
             if (preg_match('/\( \s* (\d+) \s* , \s* (\d+) \s* \)/x', $this->str, $matches, 0, $this->p)) {
                 $this->p += strlen($matches[0]);
