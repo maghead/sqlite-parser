@@ -116,11 +116,6 @@ class BaseParser
         }
     }
 
-    protected function rollback($p)
-    {
-        $this->p = $p;
-    }
-
     protected function test(array $str)
     {
         foreach ($str as $s) {

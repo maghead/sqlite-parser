@@ -332,12 +332,12 @@ class CreateTableParser extends BaseParser
                 $this->p += strlen($matches[0]);
 
                 return new Token('precision', [intval($matches[1])]);
+
             } else {
+
                 throw new Exception('Invalid precision syntax');
             }
         }
-
-        return;
     }
 
     protected function sortKeywordsByLen(array &$keywords)
