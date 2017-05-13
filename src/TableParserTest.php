@@ -70,7 +70,7 @@ class TableParserTest extends TestCase
     public function testForeignKeyReferenceParsing()
     {
         $parser = new TableParser;
-        $def = $parser->parse('CREATE TABLE foo (`book_id` INT UNSIGNED NOT NULL CONSTRAINT const_book FOREIGN KEY (book_id) REFERENCES books(id))');
+        $def = $parser->parse('CREATE TABLE foo (`book_id` INT UNSIGNED NOT NULL CONSTRAINT const_book FOREIGN KEY (book_id) REFERENCES books(id, name))');
         $this->assertNotNull($def);
         $this->assertEquals('foo', $def->tableName);
         $this->assertCount(1, $def->columns);
@@ -83,7 +83,7 @@ class TableParserTest extends TestCase
 
         $this->assertEquals(['book_id'], $def->constraints[0]->foreignKey->columns ); 
         $this->assertEquals('books', $def->constraints[0]->foreignKey->references->table ); 
-        $this->assertEquals(['id'], $def->constraints[0]->foreignKey->references->columns ); 
+        $this->assertEquals(['id','name'], $def->constraints[0]->foreignKey->references->columns ); 
     }
 
 
