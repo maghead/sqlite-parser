@@ -1,0 +1,23 @@
+language: php
+
+php:
+- "7.0"
+- "7.1"
+# - hhvm
+
+install:
+- phpenv rehash
+- travis_retry composer install
+- travis_retry composer require "satooshi/php-coveralls" "~1"
+
+script:
+- phpunit
+
+after_success:
+- php vendor/bin/coveralls -v
+
+cache:
+  apt: true
+  directories:
+  - vendor
+  - $HOME/.composer/cache
