@@ -31,10 +31,7 @@ class CreateTableParser extends BaseParser
     public static $numericTypes = ['NUMERIC', 'DECIMAL', 'BOOLEAN', 'DATE', 'DATETIME', 'TIMESTAMP'];
 
     public static $blobTypes = ['BLOB', 'NONE'];
-<<<<<<< Updated upstream
 
-=======
->>>>>>> Stashed changes
     public static $realTypes = ['REAL', 'DOUBLE', 'DOUBLE PRECISION', 'FLOAT'];
 
     public function parse($input, $offset = 0)
@@ -117,6 +114,7 @@ class CreateTableParser extends BaseParser
             }
 
             while ($constraintToken = $this->tryParseColumnConstraint()) {
+
                 if ($constraintToken->val === 'PRIMARY') {
                     $this->tryParseKeyword(['KEY']);
 
@@ -130,15 +128,15 @@ class CreateTableParser extends BaseParser
                         $column->autoIncrement = true;
                     }
 
-                } else if ($constraintToken->val == 'UNIQUE') {
+                } else if ($constraintToken->val === 'UNIQUE') {
 
                     $column->unique = true;
 
-                } else if ($constraintToken->val == 'NOT NULL') {
+                } else if ($constraintToken->val === 'NOT NULL') {
 
                     $column->notNull = true;
 
-                } else if ($constraintToken->val == 'NULL') {
+                } else if ($constraintToken->val === 'NULL') {
 
                     $column->notNull = false;
 
@@ -180,8 +178,12 @@ class CreateTableParser extends BaseParser
             }
         } // end of column parsing
 
-        if ($tableConstraints = $this->tryParseTableConstraints()) {
-            $tableDef->constraints = $tableConstraints;
+
+        $this->ignoreSpaces();
+        if ($this->metComma()) {
+            if ($tableConstraints = $this->tryParseTableConstraints()) {
+                $tableDef->constraints = $tableConstraints;
+            }
         }
         $this->ignoreSpaces();
         return $tableDef;
@@ -250,6 +252,7 @@ class CreateTableParser extends BaseParser
                 $tableConstraint->name = $constraintName->val;
             }
 
+
             $this->ignoreSpaces();
             $tableConstraintKeyword = $this->tryParseKeyword(['PRIMARY', 'UNIQUE', 'CHECK', 'FOREIGN']);
 
@@ -289,6 +292,13 @@ class CreateTableParser extends BaseParser
                 $tableConstraint->foreignKey = $foreignKey;
             }
             $tableConstraints[] = $tableConstraint;
+
+            if ($this->metComma()) {
+                $this->skipComma();
+                $this->ignoreSpaces();
+            } else {
+                break;
+            }
         }
 
         return $tableConstraints;
@@ -372,15 +382,16 @@ class CreateTableParser extends BaseParser
     {
         $allTypes = array_merge(static::$intTypes, static::$textTypes, static::$blobTypes, static::$realTypes, static::$numericTypes);
         $this->sortKeywordsByLen($allTypes);
+
         foreach ($allTypes as $typeName) {
             // Matched
-            if (($p2 = stripos($this->str, $typeName, $this->p)) !== false && $p2 == $this->p) {
+            if (($p2 = stripos($this->str, $typeName, $this->p)) !== FALSE && $p2 == $this->p) {
                 $this->p += strlen($typeName);
 
                 return new Token('type-name', $typeName);
             }
         }
-        throw new Exception('Expecting type-name'.$this->currentWindow());
+        throw new Exception('Expecting type-name: '.$this->currentWindow());
     }
 
     protected function tryParseIdentifier()

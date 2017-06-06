@@ -94,9 +94,9 @@ class CreateTableParserTest extends TestCase
         $parser = new CreateTableParser;
         $def = $parser->parse($sql);
         $this->assertEquals('published_at', $def->columns[1]->name);
-        $this->assertEquals('timestamp', $def->columns[1]->type);
-        $this->assertFalse($def->columns[1]->primary);
-        $this->assertFalse($def->columns[1]->autoIncrement);
+        $this->assertEquals('TIMESTAMP', $def->columns[1]->type);
+        $this->assertNotTrue($def->columns[1]->primary);
+        $this->assertNotTrue($def->columns[1]->autoIncrement);
         $this->assertNotTrue($def->columns[1]->notNull);
         $this->assertNotTrue($def->columns[0]->unsigned);
     }
