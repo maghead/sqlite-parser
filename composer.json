@@ -9,7 +9,7 @@
     ],
     "description": "sqlite table schema parser",
     "require": {
-        "php": ">=7.0"
+        "php": ">=5.6"
     },
     "support": {
         "issues": "https://github.com/maghead/sqlite-parser/issues"
