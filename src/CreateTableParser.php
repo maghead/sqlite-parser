@@ -31,7 +31,10 @@ class CreateTableParser extends BaseParser
     public static $numericTypes = ['NUMERIC', 'DECIMAL', 'BOOLEAN', 'DATE', 'DATETIME', 'TIMESTAMP'];
 
     public static $blobTypes = ['BLOB', 'NONE'];
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
     public static $realTypes = ['REAL', 'DOUBLE', 'DOUBLE PRECISION', 'FLOAT'];
 
     public function parse($input, $offset = 0)
@@ -101,21 +104,20 @@ class CreateTableParser extends BaseParser
             $column->type = $typeName->val;
             $precision = $this->tryParseTypePrecision();
             if ($precision && $precision->val) {
-                if (count($precision->val) == 2) {
+                if (count($precision->val) === 2) {
                     $column->length = $precision->val[0];
                     $column->decimals = $precision->val[1];
-                } elseif (count($precision->val) == 1) {
+                } else if (count($precision->val) === 1) {
                     $column->length = $precision->val[0];
                 }
             }
 
-            if (in_array(strtoupper($column->type), self::$intTypes)) {
+            if (in_array(strtoupper($column->type), static::$intTypes)) {
                 $column->unsigned = $this->consume('unsigned', 'unsigned');
             }
 
             while ($constraintToken = $this->tryParseColumnConstraint()) {
-
-                if ($constraintToken->val == 'PRIMARY') {
+                if ($constraintToken->val === 'PRIMARY') {
                     $this->tryParseKeyword(['KEY']);
 
                     $column->primary = true;

@@ -41,7 +41,7 @@ class BaseParser
             if ($p2 === $this->p) {
                 $this->p += strlen($keyword);
 
-                return new Token($as, $keyword);
+                return new Token($as, strtoupper($keyword));
             }
         }
 

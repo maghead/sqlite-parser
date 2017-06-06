@@ -78,6 +78,50 @@ class CreateTableParserTest extends TestCase
         $this->assertCount(2, $def->constraints[0]->unique);
     }
 
+
+
+    public function testParseTimestampNull()
+    {
+        $sql = "CREATE TABLE `books` (
+            `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            `published_at` timestamp
+        );";
+        /*
+  `publisher_id` INTEGER REFERENCES publishers(id),
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` timestamp NULL
+         */
+        $parser = new CreateTableParser;
+        $def = $parser->parse($sql);
+        $this->assertEquals('published_at', $def->columns[1]->name);
+        $this->assertEquals('timestamp', $def->columns[1]->type);
+        $this->assertFalse($def->columns[1]->primary);
+        $this->assertFalse($def->columns[1]->autoIncrement);
+        $this->assertNotTrue($def->columns[1]->notNull);
+        $this->assertNotTrue($def->columns[0]->unsigned);
+    }
+
+
+    public function testParseIntegerNotNullPrimaryKeyWithAutoIncrement()
+    {
+        $sql = "CREATE TABLE `books` (`id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT)";
+        /*
+  `publisher_id` INTEGER REFERENCES publishers(id),
+  `published_at` timestamp,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` timestamp NULL
+         */
+        $parser = new CreateTableParser;
+        $def = $parser->parse($sql);
+        $this->assertEquals('id', $def->columns[0]->name);
+        $this->assertEquals('INTEGER', $def->columns[0]->type);
+        $this->assertTrue($def->columns[0]->primary);
+        $this->assertTrue($def->columns[0]->autoIncrement);
+        $this->assertTrue($def->columns[0]->notNull);
+        $this->assertFalse($def->columns[0]->unsigned);
+    }
+
+
     public function testForeignKeyReferenceParsing()
     {
         $parser = new CreateTableParser;
