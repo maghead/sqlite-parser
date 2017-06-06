@@ -30,5 +30,6 @@ class Column {
 
     public $references;
 
+    public $constraints;
 }
 

@@ -12,4 +12,8 @@ class Constraint {
 
     public $foreignKey;
 
+
+    /* column */
+    public $notNull;
+
 }

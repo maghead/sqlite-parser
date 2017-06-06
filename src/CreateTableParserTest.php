@@ -43,12 +43,12 @@ class CreateTableParserTest extends TestCase
         $data[] = ['CREATE TEMP TABLE `foo` (`a` TIMESTAMP DEFAULT CURRENT_TIME)', new Token('literal','CURRENT_TIME')];
         $data[] = ['CREATE TEMP TABLE `foo` (`a` TIMESTAMP DEFAULT CURRENT_DATE)', new Token('literal','CURRENT_DATE')];
         $data[] = ['CREATE TEMP TABLE `foo` (`a` TIMESTAMP DEFAULT CURRENT_TIMESTAMP)', new Token('literal','CURRENT_TIMESTAMP')];
-        $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20 CONSTRAINT aa UNIQUE(a))', -20];
-        $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20 CONSTRAINT aa UNIQUE(a COLLATE NOCASE ASC))', -20];
-        $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20 CONSTRAINT aa UNIQUE(a ASC))', -20];
-        $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20 CONSTRAINT aa UNIQUE(a DESC))', -20];
-        $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20 CONSTRAINT aa PRIMARY(a))', -20];
-        $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20 CONSTRAINT aa PRIMARY KEY(a))', -20];
+        $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20, CONSTRAINT aa UNIQUE(a))', -20];
+        $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20, CONSTRAINT aa UNIQUE(a COLLATE NOCASE ASC))', -20];
+        $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20, CONSTRAINT aa UNIQUE(a ASC))', -20];
+        $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20, CONSTRAINT aa UNIQUE(a DESC))', -20];
+        $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20, CONSTRAINT aa PRIMARY(a))', -20];
+        $data[] = ['CREATE TEMP TABLE `foo` (`a` INT DEFAULT -20, CONSTRAINT aa PRIMARY KEY(a))', -20];
         $data[] = ['CREATE TABLE `foo` (`a` TEXT COLLATE NOCASE DEFAULT 0)', 0];
         return $data;
     }
@@ -80,17 +80,39 @@ class CreateTableParserTest extends TestCase
 
 
 
-    public function testParseTimestampNull()
+    public function testShouldParseTimestampDefaultCurrentTimestamp()
+    {
+        $sql = "CREATE TABLE `books` (
+            `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+            `published_at` timestamp
+        );";
+
+        $parser = new CreateTableParser;
+        $def = $parser->parse($sql);
+
+        $this->assertEquals('updated_at', $def->columns[1]->name);
+        $this->assertEquals('TIMESTAMP', $def->columns[1]->type);
+        $this->assertNotTrue($def->columns[1]->primary);
+        $this->assertNotTrue($def->columns[1]->autoIncrement);
+        $this->assertFalse($def->columns[1]->notNull);
+        $this->assertInstanceOf(Token::class, $def->columns[1]->default);
+
+        $this->assertEquals('published_at', $def->columns[2]->name);
+        $this->assertEquals('TIMESTAMP', $def->columns[2]->type);
+        $this->assertNotTrue($def->columns[2]->primary);
+        $this->assertNotTrue($def->columns[2]->autoIncrement);
+        $this->assertNotTrue($def->columns[2]->notNull);
+    }
+
+
+    public function testShouldParseTimestampNull()
     {
         $sql = "CREATE TABLE `books` (
             `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
             `published_at` timestamp
         );";
-        /*
-  `publisher_id` INTEGER REFERENCES publishers(id),
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `created_at` timestamp NULL
-         */
+
         $parser = new CreateTableParser;
         $def = $parser->parse($sql);
         $this->assertEquals('published_at', $def->columns[1]->name);
@@ -105,12 +127,6 @@ class CreateTableParserTest extends TestCase
     public function testParseIntegerNotNullPrimaryKeyWithAutoIncrement()
     {
         $sql = "CREATE TABLE `books` (`id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT)";
-        /*
-  `publisher_id` INTEGER REFERENCES publishers(id),
-  `published_at` timestamp,
-  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `created_at` timestamp NULL
-         */
         $parser = new CreateTableParser;
         $def = $parser->parse($sql);
         $this->assertEquals('id', $def->columns[0]->name);
@@ -125,7 +141,7 @@ class CreateTableParserTest extends TestCase
     public function testForeignKeyReferenceParsing()
     {
         $parser = new CreateTableParser;
-        $def = $parser->parse('CREATE TABLE foo (`book_id` INT UNSIGNED NOT NULL CONSTRAINT const_book FOREIGN KEY (book_id) REFERENCES books(id, name))');
+        $def = $parser->parse('CREATE TABLE foo (`book_id` INT UNSIGNED NOT NULL, CONSTRAINT const_book FOREIGN KEY (book_id) REFERENCES books(id, name))');
         $this->assertNotNull($def);
         $this->assertEquals('foo', $def->tableName);
         $this->assertCount(1, $def->columns);
@@ -143,8 +159,8 @@ class CreateTableParserTest extends TestCase
 
     public function testForeignKeyReferenceOnUpdateParsing()
     {
-        $sql = 'CREATE TABLE foo (`book_id` INT UNSIGNED NOT NULL 
-            CONSTRAINT const_book FOREIGN KEY (book_id) 
+        $sql = 'CREATE TABLE foo (`book_id` INT UNSIGNED NOT NULL,
+                CONSTRAINT const_book FOREIGN KEY (book_id) 
                 REFERENCES books(id) ON UPDATE SET NULL
         )';
         $parser = new CreateTableParser;
@@ -156,7 +172,7 @@ class CreateTableParserTest extends TestCase
         $this->assertEquals('INT', $def->columns[0]->type);
 
         $this->assertCount(1, $def->constraints);
-        $this->assertInstanceOf('Maghead\\SqliteParser\\Constraint', $def->constraints[0]);
+        $this->assertInstanceOf(Constraint::class, $def->constraints[0]);
         $this->assertEquals('const_book', $def->constraints[0]->name);
 
         $this->assertEquals(['book_id'], $def->constraints[0]->foreignKey->columns ); 

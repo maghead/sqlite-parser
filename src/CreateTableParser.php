@@ -70,7 +70,10 @@ class CreateTableParser extends BaseParser
 
         $this->ignoreSpaces();
         $this->expect('(');
-        $this->parseColumns($tableDef);
+
+            $this->parseColumns($tableDef);
+            $tableDef->constraints = $this->tryParseTableConstraints();
+
         $this->expect(')');
 
         return $tableDef;
@@ -82,7 +85,8 @@ class CreateTableParser extends BaseParser
         while (!$this->metEnd()) {
             $this->ignoreSpaces();
 
-            if ($this->looksLikeTableConstraint()) {
+            // table constraint keywords
+            if ($this->test(['CONSTRAINT', 'PRIMARY', 'UNIQUE', 'FOREIGN', 'CHECK'])) {
                 break;
             }
 
@@ -113,61 +117,8 @@ class CreateTableParser extends BaseParser
                 $column->unsigned = $this->consume('unsigned', 'unsigned');
             }
 
-            while ($constraintToken = $this->tryParseColumnConstraint()) {
-
-                if ($constraintToken->val === 'PRIMARY') {
-                    $this->tryParseKeyword(['KEY']);
-
-                    $column->primary = true;
-
-                    if ($orderingToken = $this->tryParseKeyword(['ASC', 'DESC'])) {
-                        $column->ordering = $orderingToken->val;
-                    }
-
-                    if ($this->tryParseKeyword(['AUTOINCREMENT'])) {
-                        $column->autoIncrement = true;
-                    }
-
-                } else if ($constraintToken->val === 'UNIQUE') {
-
-                    $column->unique = true;
-
-                } else if ($constraintToken->val === 'NOT NULL') {
-
-                    $column->notNull = true;
-
-                } else if ($constraintToken->val === 'NULL') {
-
-                    $column->notNull = false;
-
-                } else if ($constraintToken->val == 'DEFAULT') {
-
-                    // parse scalar
-                    if ($scalarToken = $this->tryParseScalar()) {
-                        $column->default = $scalarToken->val;
-                    } elseif ($literal = $this->tryParseKeyword(['CURRENT_TIME', 'CURRENT_DATE', 'CURRENT_TIMESTAMP'], 'literal')) {
-                        $column->default = $literal;
-                    } elseif ($null = $this->tryParseKeyword(['NULL'])) {
-                        $column->default = null;
-                    } elseif ($null = $this->tryParseKeyword(['TRUE'])) {
-                        $column->default = true;
-                    } elseif ($null = $this->tryParseKeyword(['FALSE'])) {
-                        $column->default = false;
-                    } else {
-                        throw new Exception("Can't parse literal: ".$this->currentWindow());
-                    }
-
-                } else if ($constraintToken->val == 'COLLATE') {
-
-                    $collateName = $this->tryParseKeyword(['BINARY','NOCASE', 'RTRIM'], 'literal');
-                    $column->collate = $collateName->val;
-
-                } else if ($constraintToken->val == 'REFERENCES') {
-
-                    $column->references = $this->parseReferenceClause();
-
-                }
-                $this->ignoreSpaces();
+            while ($const = $this->tryParseColumnConstraint($column)) {
+                $column->constraints[] = $const;
             }
 
             $tableDef->columns[] = $column;
@@ -175,16 +126,12 @@ class CreateTableParser extends BaseParser
             if ($this->metComma()) {
                 $this->skipComma();
                 $this->ignoreSpaces();
+            } else {
+                break;
             }
         } // end of column parsing
 
 
-        $this->ignoreSpaces();
-        if ($this->metComma()) {
-            if ($tableConstraints = $this->tryParseTableConstraints()) {
-                $tableDef->constraints = $tableConstraints;
-            }
-        }
         $this->ignoreSpaces();
         return $tableDef;
     }
@@ -213,10 +160,6 @@ class CreateTableParser extends BaseParser
     }
 
     
-    protected function looksLikeTableConstraint()
-    {
-        return $this->test(['CONSTRAINT', 'PRIMARY', 'UNIQUE', 'FOREIGN', 'CHECK']);
-    }
 
     protected function parseColumnNames()
     {
@@ -235,64 +178,73 @@ class CreateTableParser extends BaseParser
         return $columnNames;
     }
 
+    protected function parseTableConstraint()
+    {
+        $this->ignoreSpaces();
+
+        $tableConstraint = new Constraint;
+
+        if ($this->tryParseKeyword(['CONSTRAINT'])) {
+            $this->ignoreSpaces();
+            $constraintName = $this->tryParseIdentifier();
+            if (!$constraintName) {
+                throw new Exception('Expect constraint name');
+            }
+            $tableConstraint->name = $constraintName->val;
+        }
+
+        $this->ignoreSpaces();
+        $tableConstraintKeyword = $this->tryParseKeyword(['PRIMARY', 'UNIQUE', 'CHECK', 'FOREIGN']);
+
+        if (!$tableConstraintKeyword) {
+            if (isset($tableConstraint->name)) {
+                throw new Exception('Expect constraint type');
+            }
+            return false;
+        }
+
+        if (in_array($tableConstraintKeyword->val, ['PRIMARY', 'FOREIGN'])) {
+            $this->ignoreSpaces();
+            $this->tryParseKeyword(['KEY']);
+        }
+
+        $this->ignoreSpaces();
+
+        if ($tableConstraintKeyword->val == 'PRIMARY') {
+            if ($indexColumns = $this->tryParseIndexColumns()) {
+                $tableConstraint->primaryKey = $indexColumns;
+            }
+        } else if ($tableConstraintKeyword->val == 'UNIQUE') {
+            if ($indexColumns = $this->tryParseIndexColumns()) {
+                $tableConstraint->unique = $indexColumns;
+            }
+        } else if ($tableConstraintKeyword->val == 'FOREIGN') {
+
+            $foreignKey = new stdClass;
+
+            $this->expect('(');
+            $foreignKey->columns = $this->parseColumnNames();
+            $this->expect(')');
+
+            $this->expectKeyword(['REFERENCES']);
+
+            $foreignKey->references = $this->parseReferenceClause();
+
+            $tableConstraint->foreignKey = $foreignKey;
+        }
+
+        return $tableConstraint;
+    }
+
     protected function tryParseTableConstraints()
     {
         $tableConstraints = null;
 
-        while (!$this->metEnd()) {
-            $this->ignoreSpaces();
-            $tableConstraint = new Constraint;
 
-            if ($this->tryParseKeyword(['CONSTRAINT'])) {
-                $this->ignoreSpaces();
-                $constraintName = $this->tryParseIdentifier();
-                if (!$constraintName) {
-                    throw new Exception('Expect constraint name');
-                }
-                $tableConstraint->name = $constraintName->val;
-            }
-
-
-            $this->ignoreSpaces();
-            $tableConstraintKeyword = $this->tryParseKeyword(['PRIMARY', 'UNIQUE', 'CHECK', 'FOREIGN']);
-
-            if (!$tableConstraintKeyword) {
-                if (isset($tableConstraint->name)) {
-                    throw new Exception('Expect constraint type');
-                }
-            }
-
-            if (in_array($tableConstraintKeyword->val, ['PRIMARY', 'FOREIGN'])) {
-                $this->ignoreSpaces();
-                $this->tryParseKeyword(['KEY']);
-            }
-
-            $this->ignoreSpaces();
-
-            if ($tableConstraintKeyword->val == 'PRIMARY') {
-                if ($indexColumns = $this->tryParseIndexColumns()) {
-                    $tableConstraint->primaryKey = $indexColumns;
-                }
-            } else if ($tableConstraintKeyword->val == 'UNIQUE') {
-                if ($indexColumns = $this->tryParseIndexColumns()) {
-                    $tableConstraint->unique = $indexColumns;
-                }
-            } else if ($tableConstraintKeyword->val == 'FOREIGN') {
-
-                $foreignKey = new stdClass;
-
-                $this->expect('(');
-                $foreignKey->columns = $this->parseColumnNames();
-                $this->expect(')');
-
-                $this->expectKeyword(['REFERENCES']);
-
-                $foreignKey->references = $this->parseReferenceClause();
-
-                $tableConstraint->foreignKey = $foreignKey;
-            }
+        while ($tableConstraint = $this->parseTableConstraint()) {
             $tableConstraints[] = $tableConstraint;
 
+            $this->ignoreSpaces();
             if ($this->metComma()) {
                 $this->skipComma();
                 $this->ignoreSpaces();
@@ -304,9 +256,104 @@ class CreateTableParser extends BaseParser
         return $tableConstraints;
     }
 
-    protected function tryParseColumnConstraint()
+    protected function tryParseColumnConstraint(Column $column)
     {
-        return $this->tryParseKeyword(['PRIMARY', 'UNIQUE', 'NOT NULL', 'NULL', 'DEFAULT', 'COLLATE', 'REFERENCES'], 'constraint');
+        $constraint = new Constraint;
+
+        if ($this->tryParseKeyword(['CONSTRAINT'])) {
+            $this->ignoreSpaces();
+            $constraintName = $this->tryParseIdentifier();
+            if (!$constraintName) {
+                throw new Exception('Expect constraint name');
+            }
+            $constraint->name = $constraintName->val;
+        }
+
+        $t = $this->tryParseKeyword(['PRIMARY', 'UNIQUE', 'NOT NULL', 'NULL', 'DEFAULT', 'COLLATE', 'REFERENCES'], 'constraint');
+
+
+        if (!$t) {
+            if ($constraint->name) {
+                throw new Exception('Expect constraint declaration after the constraint name:' . $this->currentWindow());
+            } 
+            return false;
+        }
+
+        switch ($t->val) {
+
+            case 'PRIMARY':
+
+                $this->tryParseKeyword(['KEY']);
+
+                $constraint->primaryKey = true;
+                $column->primary = true; // sync to column
+
+                if ($orderingToken = $this->tryParseKeyword(['ASC', 'DESC'])) {
+                    $column->ordering = $orderingToken->val;
+                }
+
+                if ($this->tryParseKeyword(['AUTOINCREMENT'])) {
+                    $column->autoIncrement = true;
+                }
+            break;
+
+            case 'UNIQUE':
+
+                $constraint->unique = true;
+                $column->unique = true;
+
+            break;
+
+            case 'NOT NULL':
+
+                $constraint->notNull = true;
+                $column->notNull = true;
+
+                break;
+
+            case 'NULL':
+
+                $constraint->notNull = false;
+                $column->notNull = false;
+
+                break;
+
+            case 'DEFAULT':
+
+                $this->parseDefaultValue($column);
+                break;
+
+            case 'COLLATE':
+
+                $collateName = $this->tryParseKeyword(['BINARY','NOCASE', 'RTRIM'], 'literal');
+                $column->collate = $collateName->val;
+                break;
+
+            case 'REFERENCES':
+
+                $column->references = $this->parseReferenceClause();
+                break;
+
+        }
+        return $constraint;
+    }
+
+    protected function parseDefaultValue(Column $c)
+    {
+        // parse scalar
+        if ($scalarToken = $this->tryParseScalar()) {
+            $c->default = $scalarToken->val;
+        } elseif ($literal = $this->tryParseKeyword(['CURRENT_TIME', 'CURRENT_DATE', 'CURRENT_TIMESTAMP'], 'literal')) {
+            $c->default = $literal;
+        } elseif ($null = $this->tryParseKeyword(['NULL'])) {
+            $c->default = null;
+        } elseif ($null = $this->tryParseKeyword(['TRUE'])) {
+            $c->default = true;
+        } elseif ($null = $this->tryParseKeyword(['FALSE'])) {
+            $c->default = false;
+        } else {
+            throw new Exception("Can't parse literal: ".$this->currentWindow());
+        }
     }
 
 
