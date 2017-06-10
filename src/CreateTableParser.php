@@ -393,19 +393,33 @@ class CreateTableParser extends BaseParser
     {
         $c = $this->cur();
         if ($c === '(') {
-            if (preg_match('/\( \s* (\d+) \s* , \s* (\d+) \s* \)/x', $this->str, $matches, 0, $this->p)) {
+
+            // A (PCRE_ANCHORED)
+            // If this modifier is set, the pattern is forced to be "anchored",
+            // that is, it is constrained to match only at the start of the
+            // string which is being searched (the "subject string"). This
+            // effect can also be achieved by appropriate constructs in the
+            // pattern itself, which is the only way to do it in Perl.
+
+            if (preg_match('/\(
+                \s*
+                (\d+)
+                \s*,\s*
+                (\d+)
+                \s*
+                \)/xA', $this->str, $matches, 0, $this->p)) {
 
                 $this->p += strlen($matches[0]);
 
                 return new Token('precision', [intval($matches[1]), intval($matches[2])]);
-            } elseif (preg_match('/\(  \s* (\d+) \s* \)/x', $this->str, $matches, 0, $this->p)) {
+            } elseif (preg_match('/\(  \s* (\d+) \s* \)/xA', $this->str, $matches, 0, $this->p)) {
                 $this->p += strlen($matches[0]);
 
                 return new Token('precision', [intval($matches[1])]);
 
             } else {
 
-                throw new Exception('Invalid precision syntax');
+                throw new Exception('Invalid precision syntax:' . $this->currentWindow());
             }
         }
     }
@@ -459,7 +473,7 @@ class CreateTableParser extends BaseParser
             return new Token('identifier', $token);
         }
 
-        if (preg_match('/^(\w+)/', substr($this->str, $this->p), $matches)) {
+        if (preg_match('/(\w+)/A', $this->str, $matches, 0, $this->p)) {
             $this->p += strlen($matches[0]);
 
             return new Token('identifier', $matches[1]);
@@ -484,7 +498,7 @@ class CreateTableParser extends BaseParser
 
             return new Token('string', substr($this->str, $p, ($this->p - 1) - $p));
 
-        } else if (preg_match('/^-?\d+(\.\d+)?/x', substr($this->str, $this->p), $matches)) {
+        } else if (preg_match('/-?\d+(\.\d+)?/xA', $this->str, $matches, 0, $this->p)) {
 
             $this->p += strlen($matches[0]);
 
