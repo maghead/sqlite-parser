@@ -321,6 +321,7 @@ class CreateTableParser extends BaseParser
             case 'DEFAULT':
 
                 $this->parseDefaultValue($column);
+
                 break;
 
             case 'COLLATE':
@@ -343,13 +344,13 @@ class CreateTableParser extends BaseParser
         // parse scalar
         if ($scalarToken = $this->tryParseScalar()) {
             $c->default = $scalarToken->val;
-        } elseif ($literal = $this->tryParseKeyword(['CURRENT_TIME', 'CURRENT_DATE', 'CURRENT_TIMESTAMP'], 'literal')) {
+        } else if ($literal = $this->tryParseKeyword(['CURRENT_TIME', 'CURRENT_DATE', 'CURRENT_TIMESTAMP'], 'literal')) {
             $c->default = $literal;
-        } elseif ($null = $this->tryParseKeyword(['NULL'])) {
+        } else if ($null = $this->tryParseKeyword(['NULL'])) {
             $c->default = null;
-        } elseif ($null = $this->tryParseKeyword(['TRUE'])) {
+        } else if ($null = $this->tryParseKeyword(['TRUE'])) {
             $c->default = true;
-        } elseif ($null = $this->tryParseKeyword(['FALSE'])) {
+        } else if ($null = $this->tryParseKeyword(['FALSE'])) {
             $c->default = false;
         } else {
             throw new Exception("Can't parse literal: ".$this->currentWindow());
@@ -391,8 +392,9 @@ class CreateTableParser extends BaseParser
     protected function tryParseTypePrecision()
     {
         $c = $this->cur();
-        if ($c == '(') {
+        if ($c === '(') {
             if (preg_match('/\( \s* (\d+) \s* , \s* (\d+) \s* \)/x', $this->str, $matches, 0, $this->p)) {
+
                 $this->p += strlen($matches[0]);
 
                 return new Token('precision', [intval($matches[1]), intval($matches[2])]);
@@ -482,7 +484,7 @@ class CreateTableParser extends BaseParser
 
             return new Token('string', substr($this->str, $p, ($this->p - 1) - $p));
 
-        } else if (preg_match('/-?\d+(\.\d+)?/x', substr($this->str, $this->p), $matches)) {
+        } else if (preg_match('/^-?\d+(\.\d+)?/x', substr($this->str, $this->p), $matches)) {
 
             $this->p += strlen($matches[0]);
 

@@ -157,6 +157,41 @@ class CreateTableParserTest extends TestCase
         $this->assertEquals(['id','name'], $def->constraints[0]->foreignKey->references->columns ); 
     }
 
+
+
+    public function testParseReferenceAndDefaultCurrentTimestamp()
+    {
+        $sql = 'CREATE TABLE `books` (
+  `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  `title` varchar(128),
+  `subtitle` varchar(256),
+  `isbn` varchar(128) UNIQUE,
+  `description` text,
+  `view` INTEGER DEFAULT 0,
+  `published` boolean DEFAULT 0,
+  `publisher_id` INTEGER REFERENCES publishers(id),
+  `published_at` timestamp,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `created_at` timestamp NULL,
+  `is_hot` boolean DEFAULT 1,
+  `is_selled` boolean DEFAULT 0
+)';
+
+        $parser = new CreateTableParser;
+        $def = $parser->parse($sql);
+        $this->assertInstanceOf(Table::class, $def);
+
+        $this->assertEquals(128, $def->columns[1]->length);
+        $this->assertEquals(256, $def->columns[2]->length);
+
+        $this->assertInstanceOf(Token::class, $def->columns[9]->default);
+        $this->assertEquals('CURRENT_TIMESTAMP', $def->columns[9]->default->val);
+
+        $this->assertEquals('publishers', $def->columns[7]->references->table);
+        $this->assertEquals(['id'], $def->columns[7]->references->columns);
+    }
+
+
     public function testForeignKeyReferenceOnUpdateParsing()
     {
         $sql = 'CREATE TABLE foo (`book_id` INT UNSIGNED NOT NULL,
