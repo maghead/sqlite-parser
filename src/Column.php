@@ -2,8 +2,8 @@
 
 namespace Maghead\SqliteParser;
 
-class Column {
-
+class Column
+{
     public $name;
 
     public $type;
@@ -32,4 +32,3 @@ class Column {
 
     public $constraints;
 }
-

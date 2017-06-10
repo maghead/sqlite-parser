@@ -5,8 +5,6 @@ namespace Maghead\SqliteParser;
 use Exception;
 use stdClass;
 
-
-
 /**
  * SQLite Parser for parsing table column definitions:.
  *
@@ -71,8 +69,8 @@ class CreateTableParser extends BaseParser
         $this->ignoreSpaces();
         $this->expect('(');
 
-            $this->parseColumns($tableDef);
-            $tableDef->constraints = $this->tryParseTableConstraints();
+        $this->parseColumns($tableDef);
+        $tableDef->constraints = $this->tryParseTableConstraints();
 
         $this->expect(')');
 
@@ -108,7 +106,7 @@ class CreateTableParser extends BaseParser
                 if (count($precision->val) === 2) {
                     $column->length = $precision->val[0];
                     $column->decimals = $precision->val[1];
-                } else if (count($precision->val) === 1) {
+                } elseif (count($precision->val) === 1) {
                     $column->length = $precision->val[0];
                 }
             }
@@ -214,12 +212,11 @@ class CreateTableParser extends BaseParser
             if ($indexColumns = $this->tryParseIndexColumns()) {
                 $tableConstraint->primaryKey = $indexColumns;
             }
-        } else if ($tableConstraintKeyword->val == 'UNIQUE') {
+        } elseif ($tableConstraintKeyword->val == 'UNIQUE') {
             if ($indexColumns = $this->tryParseIndexColumns()) {
                 $tableConstraint->unique = $indexColumns;
             }
-        } else if ($tableConstraintKeyword->val == 'FOREIGN') {
-
+        } elseif ($tableConstraintKeyword->val == 'FOREIGN') {
             $foreignKey = new stdClass;
 
             $this->expect('(');
@@ -275,7 +272,7 @@ class CreateTableParser extends BaseParser
         if (!$t) {
             if ($constraint->name) {
                 throw new Exception('Expect constraint declaration after the constraint name:' . $this->currentWindow());
-            } 
+            }
             return false;
         }
 
@@ -344,13 +341,13 @@ class CreateTableParser extends BaseParser
         // parse scalar
         if ($scalarToken = $this->tryParseScalar()) {
             $c->default = $scalarToken->val;
-        } else if ($literal = $this->tryParseKeyword(['CURRENT_TIME', 'CURRENT_DATE', 'CURRENT_TIMESTAMP'], 'literal')) {
+        } elseif ($literal = $this->tryParseKeyword(['CURRENT_TIME', 'CURRENT_DATE', 'CURRENT_TIMESTAMP'], 'literal')) {
             $c->default = $literal;
-        } else if ($null = $this->tryParseKeyword(['NULL'])) {
+        } elseif ($null = $this->tryParseKeyword(['NULL'])) {
             $c->default = null;
-        } else if ($null = $this->tryParseKeyword(['TRUE'])) {
+        } elseif ($null = $this->tryParseKeyword(['TRUE'])) {
             $c->default = true;
-        } else if ($null = $this->tryParseKeyword(['FALSE'])) {
+        } elseif ($null = $this->tryParseKeyword(['FALSE'])) {
             $c->default = false;
         } else {
             throw new Exception("Can't parse literal: ".$this->currentWindow());
@@ -408,7 +405,6 @@ class CreateTableParser extends BaseParser
                 (\d+)
                 \s*
                 \)/xA', $this->str, $matches, 0, $this->p)) {
-
                 $this->p += strlen($matches[0]);
 
                 return new Token('precision', [intval($matches[1]), intval($matches[2])]);
@@ -416,9 +412,7 @@ class CreateTableParser extends BaseParser
                 $this->p += strlen($matches[0]);
 
                 return new Token('precision', [intval($matches[1])]);
-
             } else {
-
                 throw new Exception('Invalid precision syntax:' . $this->currentWindow());
             }
         }
@@ -448,7 +442,7 @@ class CreateTableParser extends BaseParser
 
         foreach ($allTypes as $typeName) {
             // Matched
-            if (($p2 = stripos($this->str, $typeName, $this->p)) !== FALSE && $p2 == $this->p) {
+            if (($p2 = stripos($this->str, $typeName, $this->p)) !== false && $p2 == $this->p) {
                 $this->p += strlen($typeName);
 
                 return new Token('type-name', $typeName);
@@ -485,7 +479,6 @@ class CreateTableParser extends BaseParser
         $this->ignoreSpaces();
 
         if ($this->advance("'")) {
-
             $p = $this->p;
 
             while (!$this->metEnd()) {
@@ -497,18 +490,13 @@ class CreateTableParser extends BaseParser
             }
 
             return new Token('string', substr($this->str, $p, ($this->p - 1) - $p));
-
-        } else if (preg_match('/-?\d+(\.\d+)?/xA', $this->str, $matches, 0, $this->p)) {
-
+        } elseif (preg_match('/-?\d+(\.\d+)?/xA', $this->str, $matches, 0, $this->p)) {
             $this->p += strlen($matches[0]);
 
             if (isset($matches[1])) {
                 return new Token('double', doubleval($matches[0]));
             }
             return new Token('int', intval($matches[0]));
-
         }
     }
-
-
 }

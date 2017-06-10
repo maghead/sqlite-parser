@@ -2,8 +2,8 @@
 
 namespace Maghead\SqliteParser;
 
-class Table {
-
+class Table
+{
     public $columns = [];
 
     public $temporary;
@@ -13,5 +13,4 @@ class Table {
     public $tableName;
 
     public $constraints;
-
 }

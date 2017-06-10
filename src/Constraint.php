@@ -2,8 +2,8 @@
 
 namespace Maghead\SqliteParser;
 
-class Constraint {
-
+class Constraint
+{
     public $name;
 
     public $primaryKey;
@@ -15,5 +15,4 @@ class Constraint {
 
     /* column */
     public $notNull;
-
 }

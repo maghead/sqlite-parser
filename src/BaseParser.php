@@ -58,7 +58,7 @@ class BaseParser
         if ($t = $this->tryParseKeyword($keywords, $as)) {
             return $t;
         }
-        throw new Exception("Expect keywords " . join(',',$keywords) . ':' . $this->currentWindow());
+        throw new Exception("Expect keywords " . join(',', $keywords) . ':' . $this->currentWindow());
     }
 
     protected function expect($c)
