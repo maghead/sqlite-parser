@@ -157,7 +157,7 @@ class CreateTableParser extends BaseParser
         ];
     }
 
-    
+
 
     protected function parseColumnNames()
     {
@@ -451,23 +451,31 @@ class CreateTableParser extends BaseParser
         throw new Exception('Expecting type-name: '.$this->currentWindow());
     }
 
+    /**
+     * @link https://www.sqlite.org/lang_keywords.html
+     * There are four escape sequences, single-quotes, double-quotes,
+     * the accent, and square brackets.
+     */
     protected function tryParseIdentifier()
     {
         $this->ignoreSpaces();
-        if ($this->str[$this->p] == '`') {
+        if (in_array($this->str[$this->p], ['`', '"', '[', "'"], true)) {
             ++$this->p;
             // find the quote pair position
-            $p2 = strpos($this->str, '`', $this->p);
+            $p2 = strpos($this->str, '`', $this->p) ?:
+                $p2 = strpos($this->str, '"', $this->p) ?:
+                    $p2 = strpos($this->str, "'", $this->p) ?:
+                        $p2 = strpos($this->str, ']', $this->p);
             if ($p2 === false) {
-                throw new Exception('Expecting identifier quote (`): '.$this->currentWindow());
+                throw new Exception('Expecting identifier quote (`): ' . $this->currentWindow());
             }
             $token = substr($this->str, $this->p, $p2 - $this->p);
             $this->p = $p2 + 1;
 
             return new Token('identifier', $token);
         }
-
-        if (preg_match('/(\w+)/A', $this->str, $matches, 0, $this->p)) {
+        // The $ is also a valid identifier, it doesn't have to be quoted
+        if (preg_match('/([a-zA-Z0-9_$]+)/A', $this->str, $matches, 0, $this->p)) {
             $this->p += strlen($matches[0]);
 
             return new Token('identifier', $matches[1]);
